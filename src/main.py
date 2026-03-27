@@ -12,6 +12,7 @@ from src.database.loader import load_imdb_to_duckdb
 from src.workloads.generator import generate_and_execute_workload, WorkloadConfig
 from src.workloads.analyzer import analyze_workload
 from src.models.registry import train_model, evaluate_model, get_available_models
+import json
 
 
 def main():
@@ -175,7 +176,8 @@ def generate_workload_cmd(args):
 
 def run_workload_cmd(args):
     """Run workload on DuckDB."""
-    from src.workloads.generator import generate_and_execute_workload, WorkloadConfig
+    from src.workloads.generator import WorkloadExecutor, WorkloadConfig
+    from src.database.duckdb_connection import create_database_connection
 
     logging.info("Running workload on DuckDB...")
 
@@ -188,14 +190,22 @@ def run_workload_cmd(args):
     with open(args.workload, 'r') as f:
         workload_queries = [line.strip() for line in f if line.strip()]
 
-    # Convert to format expected by generate_and_execute_workload
-    # This is a simplified version - in practice you'd want to parse the actual workload
-    results = generate_and_execute_workload(
-        db_path=args.db_path,
-        data_dir=args.data_dir,
-        config=config,
-        output_file=args.output
-    )
+    # Execute workload directly
+    db = create_database_connection(args.db_path)
+    executor = WorkloadExecutor(db, config)
+    results = executor.execute_workload(workload_queries)
+
+    # Save results
+    output_path = Path(args.output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_path, 'w') as f:
+        json.dump({
+            'config': config.__dict__,
+            'results': results
+        }, f, indent=2)
+
+    db.close()
 
     logging.info(f"Workload execution completed. Results saved to {args.output}")
 
