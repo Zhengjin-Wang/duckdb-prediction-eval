@@ -7,11 +7,11 @@ import sys
 import logging
 from pathlib import Path
 
-from src.utils.config import setup_logging, load_default_config
-from src.database.loader import load_imdb_to_duckdb
-from src.workloads.generator import generate_and_execute_workload, WorkloadConfig
-from src.workloads.analyzer import analyze_workload
-from src.models.registry import train_model, evaluate_model, get_available_models
+from utils.config import setup_logging, load_default_config
+from database.loader import load_imdb_to_duckdb
+from workloads.generator import generate_and_execute_workload, WorkloadConfig
+from workloads.analyzer import analyze_workload
+from models.registry import train_model, evaluate_model, get_available_models
 import json
 
 
