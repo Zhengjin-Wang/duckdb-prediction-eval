@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 import logging
 
-from src.datasets.imdb_dataset import create_imdb_dataset
-from src.workloads.generator import WorkloadGenerator, WorkloadConfig
+from datasets.imdb_dataset import create_imdb_dataset
+from workloads.generator import WorkloadGenerator, WorkloadConfig
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

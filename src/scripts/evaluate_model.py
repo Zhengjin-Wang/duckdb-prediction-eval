@@ -7,9 +7,9 @@ import json
 from pathlib import Path
 import logging
 
-from src.models.registry import evaluate_model, load_model, get_available_models
-from src.utils.metrics import ModelEvaluator
-from src.utils.config import load_default_config
+from models.registry import evaluate_model, load_model, get_available_models
+from utils.metrics import ModelEvaluator
+from utils.config import load_default_config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

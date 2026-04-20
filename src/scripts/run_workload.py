@@ -8,10 +8,10 @@ import time
 from pathlib import Path
 import logging
 
-from src.database.duckdb_connection import create_database_connection
-from src.database.loader import load_imdb_to_duckdb
-from src.workloads.generator import WorkloadExecutor, WorkloadConfig
-from src.workloads.analyzer import analyze_workload
+from database.duckdb_connection import create_database_connection
+from database.loader import load_imdb_to_duckdb
+from workloads.generator import WorkloadExecutor, WorkloadConfig
+from workloads.analyzer import analyze_workload
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

@@ -176,8 +176,8 @@ def generate_workload_cmd(args):
 
 def run_workload_cmd(args):
     """Run workload on DuckDB."""
-    from src.workloads.generator import WorkloadExecutor, WorkloadConfig
-    from src.database.duckdb_connection import create_database_connection
+    from workloads.generator import WorkloadExecutor, WorkloadConfig
+    from database.duckdb_connection import create_database_connection
 
     logging.info("Running workload on DuckDB...")
 

@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from src.database.duckdb_connection import create_database_connection
-from src.datasets.imdb_dataset import create_imdb_dataset
+from database.duckdb_connection import create_database_connection
+from datasets.imdb_dataset import create_imdb_dataset
 
 
 class DatabaseLoader:

@@ -8,8 +8,8 @@ from typing import List, Dict, Optional, Tuple, Union
 from dataclasses import dataclass
 import json
 
-from src.database.duckdb_connection import DuckDBConnection, QueryExecutor
-from src.datasets.imdb_dataset import IMDBDataset
+from database.duckdb_connection import DuckDBConnection, QueryExecutor
+from datasets.imdb_dataset import IMDBDataset
 
 
 @dataclass

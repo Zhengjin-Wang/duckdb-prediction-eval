@@ -227,7 +227,7 @@ class IMDBDataset:
             validation[table] = table in table_files
         return validation
 
-    def get_dataset_stats(self) -> Dict[str, Dict[str, Any]]:
+    def get_dataset_stats(self) -> Dict[str, Dict[str, any]]:
         """Get basic statistics about the dataset."""
         stats = {}
         table_files = self.get_table_files()
@@ -245,7 +245,7 @@ class IMDBDataset:
 
         return stats
 
-    def load_schema_from_json(self, schema_file: Optional[str] = None) -> Dict[str, Any]:
+    def load_schema_from_json(self, schema_file: Optional[str] = None) -> Dict[str, any]:
         """Load schema from JSON file if available."""
         if schema_file is None:
             schema_file = self.data_dir / "schema.json"

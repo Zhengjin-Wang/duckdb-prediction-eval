@@ -9,9 +9,9 @@ from pathlib import Path
 import logging
 
 import torch
-from src.models.registry import create_model, train_model, get_available_models
-from src.utils.config import load_default_config
-from src.utils.preprocessing import DataPreprocessor
+from models.registry import create_model, train_model, get_available_models
+from utils.config import load_default_config
+from utils.preprocessing import DataPreprocessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
