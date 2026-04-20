@@ -54,11 +54,9 @@ class DuckDBConnection:
         else:
             return conn.execute(query).df()
 
-    def execute_script(self, script_path: str):
+    def execute_script(self, script: str):
         """Execute a SQL script file."""
         conn = self.connect()
-        with open(script_path, 'r') as f:
-            script = f.read()
         conn.execute(script)
 
     def create_table_from_csv(self, table_name: str, csv_path: str, **kwargs):
