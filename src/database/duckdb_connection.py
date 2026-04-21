@@ -60,9 +60,8 @@ class DuckDBConnection:
         conn.execute(script)
 
     def create_table_from_csv(self, table_name: str, csv_path: str, **kwargs):
-        """Create table from CSV file."""
+        """Create table from CSV file, or insert into it if it already exists."""
         conn = self.connect()
-        # Default parameters for CSV reading
         csv_params = {
             'header': True,
             'escape': '\\',
@@ -71,15 +70,26 @@ class DuckDBConnection:
             **kwargs
         }
 
-        query = f"""
-        CREATE TABLE {table_name} AS
-        SELECT * FROM read_csv_auto('{csv_path}',
-            header={str(csv_params['header']).lower()},
-            escape='{csv_params['escape']}',
-            quote='{csv_params['quote']}',
-            encoding='{csv_params['encoding']}')
-        """
-        conn.execute(query)
+        read_csv_expr = (
+            f"read_csv_auto('{csv_path}',"
+            f" header={str(csv_params['header']).lower()},"
+            f" escape='{csv_params['escape']}',"
+            f" quote='{csv_params['quote']}',"
+            f" encoding='{csv_params['encoding']}')"
+        )
+
+        # If the table was pre-created by the schema step, INSERT into it.
+        # Otherwise, create the table from the CSV.
+        exists = conn.execute(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = 'main' AND table_name = ?",
+            [table_name],
+        ).fetchone()
+
+        if exists:
+            conn.execute(f"INSERT INTO {table_name} SELECT * FROM {read_csv_expr}")
+        else:
+            conn.execute(f"CREATE TABLE {table_name} AS SELECT * FROM {read_csv_expr}")
 
     def get_table_info(self, table_name: str) -> pd.DataFrame:
         """Get table schema information."""
@@ -140,8 +150,11 @@ class DuckDBConnection:
     def vacuum_analyze(self):
         """Run vacuum and analyze operations."""
         conn = self.connect()
-        # DuckDB doesn't have traditional VACUUM, but we can optimize
-        conn.execute("PRAGMA optimize;")
+        # DuckDB doesn't have VACUUM/`PRAGMA optimize`. ANALYZE refreshes
+        # statistics and CHECKPOINT flushes the WAL, which is the closest
+        # equivalent to a post-load tidy-up.
+        conn.execute("ANALYZE")
+        conn.execute("CHECKPOINT")
 
     def get_database_stats(self) -> Dict[str, Any]:
         """Get overall database statistics."""

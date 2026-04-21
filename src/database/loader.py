@@ -20,9 +20,17 @@ class DatabaseLoader:
 
     def load_dataset(self, force: bool = False):
         """Load IMDB dataset into DuckDB."""
-        if os.path.exists(self.db_path) and not force:
-            print(f"Database {self.db_path} already exists. Use force=True to overwrite.")
-            return
+        if os.path.exists(self.db_path):
+            if not force:
+                print(f"Database {self.db_path} already exists. Use force=True to overwrite.")
+                return
+            # Start from a clean file so the schema/INSERT path isn't polluted
+            # by tables left over from a previous (possibly failed) run.
+            self.db.close()
+            os.remove(self.db_path)
+            wal_path = self.db_path + ".wal"
+            if os.path.exists(wal_path):
+                os.remove(wal_path)
 
         print(f"Loading IMDB dataset into {self.db_path}...")
 
@@ -51,13 +59,10 @@ class DatabaseLoader:
         create_tables_sql = schema.get_all_create_tables_sql()
         self.db.execute_script(create_tables_sql)
 
-        # Add foreign key constraints
-        constraints = schema.get_foreign_key_constraints()
-        for constraint in constraints:
-            try:
-                self.db.execute_query(constraint)
-            except Exception as e:
-                print(f"Warning: Could not create constraint: {e}")
+        # DuckDB does not support `ALTER TABLE ... ADD FOREIGN KEY`, so foreign
+        # keys are only enforced if declared inline at CREATE TABLE time. We
+        # keep the relationship metadata on the schema object for downstream
+        # join-graph use and skip the ALTER step here.
 
     def _load_table(self, table_name: str, csv_path: str):
         """Load a single table from CSV file."""
@@ -83,21 +88,24 @@ class DatabaseLoader:
         print("Creating indexes...")
         schema = self.dataset.schema
 
-        # Create indexes on foreign key columns
-        for table_left, col_left, table_right, col_right in schema.relationships:
+        created = set()
+
+        def ensure_index(table: str, column: str):
+            key = (table, column)
+            if key in created:
+                return
+            created.add(key)
+            index_name = f"idx_{table}_{column}"
             try:
-                # Index on left table's foreign key
-                index_sql = f"CREATE INDEX idx_{table_left}_{col_left} ON {table_left}({col_left})"
-                self.db.execute_query(index_sql)
-
-                # Index on right table's primary key (usually already indexed)
-                # But we'll ensure it for completeness
-                if col_right == schema.primary_keys.get(table_right):
-                    index_sql = f"CREATE INDEX idx_{table_right}_{col_right} ON {table_right}({col_right})"
-                    self.db.execute_query(index_sql)
-
+                self.db.execute_query(
+                    f"CREATE INDEX IF NOT EXISTS {index_name} ON {table}({column})"
+                )
             except Exception as e:
-                print(f"Warning: Could not create index for {table_left}.{col_left}: {e}")
+                print(f"Warning: Could not create index for {table}.{column}: {e}")
+
+        # Index foreign-key columns; primary keys already have implicit indexes.
+        for table_left, col_left, _table_right, _col_right in schema.relationships:
+            ensure_index(table_left, col_left)
 
 
 def load_imdb_to_duckdb(db_path: str, data_dir: str, force: bool = False):
