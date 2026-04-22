@@ -179,7 +179,8 @@ class WorkloadGenerator:
         for _ in range(num_aggregates):
             func = random.choice(functions)
             table = random.choice(tables)
-            column = self._get_random_column(table)
+            numeric_only = func in ('SUM', 'AVG')
+            column = self._get_random_column(table, numeric_only=numeric_only)
             aggregates.append(f"{func}(\"{table}\".\"{column}\")")
 
         return aggregates
@@ -221,12 +222,16 @@ class WorkloadGenerator:
         columns = self._generate_columns(tables, num_group_by)
         return ", ".join(columns)
 
-    def _get_random_column(self, table_name: str) -> str:
+    def _get_random_column(self, table_name: str, numeric_only: bool = False) -> str:
         """Get a random column from a table."""
-        columns = list(self.schema.column_types[table_name].keys())
-        # Exclude primary key if it's not needed
+        col_types = self.schema.column_types[table_name]
+        if numeric_only:
+            columns = [c for c, t in col_types.items() if 'INT' in t.upper() or 'DECIMAL' in t.upper() or 'FLOAT' in t.upper() or 'DOUBLE' in t.upper()]
+            if columns:
+                return random.choice(columns)
+        columns = list(col_types.keys())
         if len(columns) > 1:
-            return random.choice(columns[1:])  # Skip first column (usually primary key)
+            return random.choice(columns[1:])
         return columns[0]
 
     def _generate_predicate_value(self, table: str, column: str, template: str) -> Union[str, int]:
